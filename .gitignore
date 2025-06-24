@@ -194,4 +194,4 @@ cython_debug/
 .cursorindexingignore
 
 #local files
-app-inicial
+app-inicial.py
