@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 from models.user import User
 from database import db
-from flask_login import LoginManager, login_user, current_user
-
+from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "yoursecretkey"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -35,6 +34,14 @@ def login():
             return jsonify({"message":"Login realizado com sucesso"}), 200
             
     return jsonify({"message":"As credenciais estão inválidas"}), 400
+
+@app.route('/logout', methods=["GET"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message" : "Logout realizado com sucesso"})
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
