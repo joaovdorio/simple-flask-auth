@@ -2,16 +2,16 @@ from flask import Flask, request, jsonify
 from models.user import User
 from database import db
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "yoursecretkey"
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = "your_secret_key"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:admin123@127.0.0.1:3306/flask-crud'
 
 login_manager = LoginManager()
 db.init_app(app)
-
 login_manager.init_app(app)
-login_manager.login_view = 'login'
 #view login
+login_manager.login_view = 'login'
 
 
 @login_manager.user_loader
@@ -48,7 +48,8 @@ def create_user():
 
     if username and password:
         #Cadastro
-        user = User(username=username, password=password)
+        user = User(username=username, password=password, role='user')
+        db.session.add(user)
         db.session.commit()
         return jsonify({"message":"Cadastro realizado com sucesso"}), 200
         
@@ -71,6 +72,9 @@ def update_user(id_user):
     data = request.json
     user = User.query.get(id_user)
 
+    if id_user != current_user.id and current_user.role == 'user':
+        return jsonify({"message":"Permissão negada"}), 403
+
     if user:
         user.password = data.get("password")
         db.session.add(user)
@@ -87,6 +91,9 @@ def delete_user(id_user):
     user = User.query.get(id_user)
     if id_user == current_user.id:
        return jsonify({"message":"Não é possível apagar seu próprio usuário"}), 403
+    
+    if current_user.role != 'admin':
+        return jsonify({"message":"Operação não permitida"}), 403
 
     if user and id_user != current_user.id:
         db.session.delete(user)
